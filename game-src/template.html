@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Wakefire</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #0a1420; color: #f1efe9;
+    font-family: "SF Pro Display", -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: none; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .lbl { font-size: 10px; letter-spacing: 0.22em; font-weight: 600; opacity: 0.72; text-transform: uppercase; }
+  .num { font-weight: 800; font-style: italic; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  #hud { position: fixed; inset: 0; pointer-events: none; display: none; text-shadow: 0 1px 6px rgba(0,0,0,0.45); }
+
+  #tl { position: absolute; left: max(22px, env(safe-area-inset-left)); top: 20px; width: 190px; }
+  #posRow { display: flex; align-items: baseline; gap: 4px; }
+  #pos { font-size: 62px; line-height: 0.9; }
+  #posRow small { font-size: 22px; font-weight: 700; font-style: italic; opacity: 0.7; }
+  .kv { display: flex; justify-content: space-between; align-items: baseline; margin-top: 7px; border-top: 1px solid rgba(241,239,233,0.25); padding-top: 6px; }
+  .kv .num { font-size: 19px; }
+  #list { margin-top: 12px; }
+  #list .row { display: flex; align-items: center; gap: 7px; font-size: 11px; letter-spacing: 0.14em; font-weight: 600; padding: 3px 0; opacity: 0.78; }
+  #list .row i { width: 3px; height: 11px; display: block; }
+  #list .row span { flex: 1; }
+  #list .row b { font-weight: 600; font-variant-numeric: tabular-nums; opacity: 0.8; letter-spacing: 0.04em; }
+  #list .row.me { opacity: 1; }
+  #list .row.me span { font-weight: 800; }
+  #list .row.out { opacity: 0.35; }
+
+  #bl { position: absolute; left: max(22px, env(safe-area-inset-left)); bottom: 20px; }
+  #speed { font-size: 84px; line-height: 0.85; display: inline-block; min-width: 150px; }
+  #bl .unit { font-size: 12px; letter-spacing: 0.2em; font-weight: 700; opacity: 0.75; margin-left: 2px; }
+  .bar { height: 4px; background: rgba(241,239,233,0.2); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: #f1efe9; transform-origin: left center; }
+  #bl .bar { width: 210px; margin-top: 10px; }
+  #bl .lbl { margin-top: 5px; }
+
+  #br { position: absolute; right: max(22px, env(safe-area-inset-right)); bottom: 20px; width: 220px; text-align: right; }
+  #br .item { margin-top: 11px; }
+  #br .bar { margin-top: 5px; }
+  #br .bar i { transform-origin: right center; }
+  #heatRow .bar i { background: #e8a23c; }
+  #heatRow.hot .lbl { color: #e2553a; opacity: 1; }
+  #heatRow.hot .bar i { background: #e2553a; }
+  .pips { display: flex; gap: 4px; justify-content: flex-end; margin-top: 5px; }
+  .pips s { width: 26px; height: 6px; background: rgba(241,239,233,0.2); }
+  .pips s.on { background: #f1efe9; }
+  .key { display: inline-block; border: 1px solid rgba(241,239,233,0.55); padding: 0 4px; margin-left: 6px; font-size: 9px; letter-spacing: 0.08em; opacity: 0.8; }
+
+  #reticle { position: absolute; left: 0; top: 0; display: none; }
+  #reticle u { position: absolute; width: 22%; height: 22%; border: 2px solid #f1efe9; }
+  #reticle u:nth-child(1) { left: 0; top: 0; border-right: 0; border-bottom: 0; }
+  #reticle u:nth-child(2) { right: 0; top: 0; border-left: 0; border-bottom: 0; }
+  #reticle u:nth-child(3) { left: 0; bottom: 0; border-right: 0; border-top: 0; }
+  #reticle u:nth-child(4) { right: 0; bottom: 0; border-left: 0; border-top: 0; }
+  #retTxt { position: absolute; left: 50%; bottom: 100%; transform: translate(-50%, -12px); white-space: pre; font-size: 10px; letter-spacing: 0.18em; font-weight: 700; }
+  #reticle .bar { position: absolute; left: 15%; width: 70%; bottom: 100%; margin-bottom: 5px; height: 3px; }
+
+  #xhair, #pip { position: absolute; left: 0; top: 0; display: none; }
+  #xhair:before, #xhair:after { content: ""; position: absolute; background: #f1efe9; box-shadow: 0 0 3px rgba(0,0,0,0.6); }
+  #xhair:before { left: -13px; top: -0.5px; width: 26px; height: 1px; -webkit-mask: linear-gradient(90deg, #000 0 8px, transparent 8px 18px, #000 18px); mask: linear-gradient(90deg, #000 0 8px, transparent 8px 18px, #000 18px); }
+  #xhair:after { top: -13px; left: -0.5px; height: 26px; width: 1px; -webkit-mask: linear-gradient(#000 0 8px, transparent 8px 18px, #000 18px); mask: linear-gradient(#000 0 8px, transparent 8px 18px, #000 18px); }
+  #pip i { position: absolute; left: -9px; top: -9px; width: 18px; height: 18px; border: 1.5px solid #f1efe9; border-radius: 50%; box-shadow: 0 0 3px rgba(0,0,0,0.5); }
+  #pip b { position: absolute; left: -1.5px; top: -1.5px; width: 3px; height: 3px; background: #f1efe9; border-radius: 50%; }
+  #pip.lock i { border-color: #e8a23c; }
+  #pip.hit i { border-color: #e2553a; transform: scale(1.35); }
+  body.aim, body.aim canvas { cursor: none; }
+  #gate { position: absolute; left: 0; top: 0; }
+  #gate div { transform: translate(-50%, -100%); text-align: center; font-size: 10px; letter-spacing: 0.18em; font-weight: 700; }
+  #gate div:after { content: ""; display: block; width: 1px; height: 16px; background: #f1efe9; margin: 4px auto 0; opacity: 0.8; }
+
+  #banner { position: absolute; left: 0; right: 0; top: 21%; text-align: center; font-size: 30px; font-weight: 800; font-style: italic; letter-spacing: 0.12em; }
+  #count { position: absolute; left: 0; right: 0; top: 30%; text-align: center; font-size: 150px; font-weight: 800; font-style: italic; }
+  #off { position: absolute; left: 0; right: 0; top: 14%; text-align: center; display: none; font-size: 12px; letter-spacing: 0.3em; font-weight: 700; color: #e8a23c; }
+  #feed { position: absolute; right: max(22px, env(safe-area-inset-right)); top: 22px; text-align: right; font-size: 10px; letter-spacing: 0.16em; font-weight: 600; text-transform: uppercase; opacity: 0.85; line-height: 1.9; }
+
+  .screen { position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 6vh 6vw;
+    background: linear-gradient(to top, rgba(6,12,20,0.88) 0%, rgba(6,12,20,0.35) 45%, rgba(6,12,20,0) 75%); }
+  .screen h1 { font-size: clamp(54px, 10vw, 132px); font-weight: 800; font-style: italic; letter-spacing: -0.03em; line-height: 0.9; }
+  .screen p.sub { font-size: 13px; letter-spacing: 0.26em; font-weight: 600; opacity: 0.8; margin: 14px 0 26px; text-transform: uppercase; }
+  .cols { display: flex; gap: 42px; flex-wrap: wrap; align-items: flex-end; }
+  .ctrl { display: grid; grid-template-columns: auto auto; gap: 5px 18px; font-size: 11px; letter-spacing: 0.14em; font-weight: 600; text-transform: uppercase; }
+  .ctrl span:nth-child(odd) { opacity: 0.6; }
+  button { font: inherit; color: #0a1420; background: #f1efe9; border: 0; padding: 15px 34px; font-size: 13px; font-weight: 800; letter-spacing: 0.24em; cursor: pointer; pointer-events: auto; }
+  button:hover { background: #fff; }
+  #results { display: none; }
+  #results .stats { display: flex; gap: 46px; margin: 18px 0 28px; }
+  #results .stats .num { font-size: 40px; display: block; margin-top: 4px; }
+  #pause { display: none; align-items: center; justify-content: center; background: rgba(6,12,20,0.55); }
+  #pause div { font-size: 34px; font-weight: 800; font-style: italic; letter-spacing: 0.2em; }
+
+  #touchUI { display: none; }
+  body.touch #touchUI { display: block; }
+  body.touch .key, body.touch .ctrl { display: none; }
+  body.touch #br { bottom: 150px; }
+  #pad { position: fixed; left: 0; top: 0; width: 50%; height: 100%; pointer-events: auto; }
+  .tb { position: fixed; pointer-events: auto; width: 74px; height: 74px; border-radius: 50%; border: 1.5px solid rgba(241,239,233,0.7); background: rgba(10,20,32,0.3);
+    display: flex; align-items: center; justify-content: center; font-size: 10px; letter-spacing: 0.14em; font-weight: 700; }
+  #tFire { right: 26px; bottom: 30px; width: 96px; height: 96px; }
+  #tRocket { right: 136px; bottom: 26px; }
+  #tMine { right: 216px; bottom: 26px; }
+  #tBoost { right: 40px; bottom: 140px; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="hud">
+  <div id="tl">
+    <div id="posRow"><span id="pos" class="num">6</span><small>/6</small></div>
+    <div class="kv"><span class="lbl">Lap</span><span id="lap" class="num">1/3</span></div>
+    <div class="kv"><span class="lbl">Time</span><span id="time" class="num">0:00.0</span></div>
+    <div id="list"></div>
+  </div>
+  <div id="feed"></div>
+  <div id="off">OFF COURSE — RETURN TO THE GATES</div>
+  <div id="banner"></div>
+  <div id="count" class="num"></div>
+  <div id="gate"><div><span class="lbl">Gate</span><br><span id="gateTxt"></span></div></div>
+  <div id="pip"><i></i><b></b></div>
+  <div id="xhair"></div>
+  <div id="reticle"><u></u><u></u><u></u><u></u><div id="retTxt"></div><div class="bar"><i></i></div></div>
+  <div id="bl">
+    <span id="speed" class="num">0</span><span class="unit">KM/H</span>
+    <div class="bar"><i id="boostFill"></i></div>
+    <div class="lbl">Boost<span class="key">SHIFT</span></div>
+  </div>
+  <div id="br">
+    <div class="item"><div class="lbl">Hull</div><div class="bar"><i id="hullFill"></i></div></div>
+    <div class="item" id="heatRow"><div class="lbl">Twin .50 barrel heat<span class="key">CLICK</span></div><div class="bar"><i id="heatFill"></i></div></div>
+    <div class="item"><div class="lbl">Rockets<span class="key">E</span></div><div class="pips" id="rockets"></div></div>
+    <div class="item"><div class="lbl">Tail-drop mines<span class="key">Q</span></div><div class="pips" id="mines"></div></div>
+  </div>
+  <div id="touchUI">
+    <div id="pad"></div>
+    <div class="tb" id="tFire">FIRE</div><div class="tb" id="tRocket">RKT</div><div class="tb" id="tMine">MINE</div><div class="tb" id="tBoost">BOOST</div>
+  </div>
+</div>
+
+<div id="title" class="screen">
+  <h1>WAKEFIRE</h1>
+  <p class="sub">Armed offshore racing · 3 laps · 6 boats</p>
+  <div class="cols">
+    <button id="start">START RACE</button>
+    <div class="ctrl">
+      <span>Throttle / steer</span><span>W A S D or arrows</span>
+      <span>Aim / fire guns</span><span>Mouse / click or Space</span>
+      <span>Gunner view</span><span>Right mouse or V</span>
+      <span>Rocket / mine</span><span>E / Q</span>
+      <span>Boost / recover</span><span>Shift / R</span>
+      <span>Pause / mute</span><span>P / M</span>
+    </div>
+  </div>
+</div>
+
+<div id="credit" style="position:fixed;right:18px;bottom:12px;font-size:9px;letter-spacing:0.12em;opacity:0.55;text-transform:uppercase;pointer-events:none">Boat: “Patrol Boat PBR MK2” by SavyTheCreator · CC BY 4.0 · Rock texture: Poly Haven CC0</div>
+
+<div id="results" class="screen">
+  <p class="sub" style="margin:0 0 6px">Race complete</p>
+  <h1 id="resPlace">1ST</h1>
+  <div class="stats">
+    <div><span class="lbl">Time</span><span class="num" id="resTime"></span></div>
+    <div><span class="lbl">Wrecks</span><span class="num" id="resWrecks"></span></div>
+  </div>
+  <div><button id="again">RACE AGAIN</button></div>
+</div>
+
+<div id="pause" class="screen"><div>PAUSED</div></div>
+
+<script>/*__JS__*/</script>
+</body>
+</html>
