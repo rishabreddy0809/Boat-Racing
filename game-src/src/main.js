@@ -12,6 +12,7 @@ import { createCourse, createRocks, createSurf, createMountains, createGates, re
 import { createBoat, loadBoatAsset, TURRET_POS } from './boat.js';
 import { Particles, Wake, Tracers } from './fx.js';
 import { createAudio } from './audio.js';
+import { createMinimap } from './minimap.js';
 import { clamp, lerp, smooth, damp, angDiff } from './util.js';
 
 const LAPS = 3;
@@ -1051,9 +1052,11 @@ function nextGateIndex() {
   for (let g = 0; g < GATE_COUNT; g++) if (course.gates[g].i > player.idx) return g;
   return 0;
 }
+const minimap = createMinimap($('minimap'), course, rocks);
 function updateHUD(dt) {
   if (state === 'title' || state === 'finished') return;
   const b = player;
+  minimap.draw({ player, boats, accents: ACCENTS, gate: course.gates[nextGateIndex()], mines: minePool, rockets: rocketPool, dt, time });
   el.speed.textContent = Math.round(Math.abs(b.speed) * 3.6);
   el.boost.style.transform = `scaleX(${b.boost / 100})`;
   el.hull.style.transform = `scaleX(${b.hp / b.maxHp})`;

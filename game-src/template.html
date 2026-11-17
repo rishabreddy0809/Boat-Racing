@@ -29,7 +29,8 @@
   #list .row.me span { font-weight: 800; }
   #list .row.out { opacity: 0.35; }
 
-  #bl { position: absolute; left: max(22px, env(safe-area-inset-left)); bottom: 20px; }
+  #bl { position: absolute; left: calc(max(22px, env(safe-area-inset-left)) + 248px); bottom: 20px; }
+  #minimap { position: absolute; top: auto; right: auto; left: max(22px, env(safe-area-inset-left)); bottom: 20px; transform-origin: left bottom; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.45)); }
   #speed { font-size: 84px; line-height: 0.85; display: inline-block; min-width: 150px; }
   #bl .unit { font-size: 12px; letter-spacing: 0.2em; font-weight: 700; opacity: 0.75; margin-left: 2px; }
   .bar { height: 4px; background: rgba(241,239,233,0.2); overflow: hidden; }
@@ -95,6 +96,10 @@
   body.touch #touchUI { display: block; }
   body.touch .key, body.touch .ctrl { display: none; }
   body.touch #br { bottom: 150px; }
+  @media (max-width: 820px), (max-height: 500px) {
+    #minimap { transform: scale(0.68); }
+    #bl { left: calc(max(22px, env(safe-area-inset-left)) + 172px); }
+  }
   #pad { position: fixed; left: 0; top: 0; width: 50%; height: 100%; pointer-events: auto; }
   .tb { position: fixed; pointer-events: auto; width: 74px; height: 74px; border-radius: 50%; border: 1.5px solid rgba(241,239,233,0.7); background: rgba(10,20,32,0.3);
     display: flex; align-items: center; justify-content: center; font-size: 10px; letter-spacing: 0.14em; font-weight: 700; }
@@ -122,6 +127,7 @@
   <div id="pip"><i></i><b></b></div>
   <div id="xhair"></div>
   <div id="reticle"><u></u><u></u><u></u><u></u><div id="retTxt"></div><div class="bar"><i></i></div></div>
+  <canvas id="minimap"></canvas>
   <div id="bl">
     <span id="speed" class="num">0</span><span class="unit">KM/H</span>
     <div class="bar"><i id="boostFill"></i></div>
