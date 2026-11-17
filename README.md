@@ -5,7 +5,7 @@ Armed offshore boat racing in the browser: 3 laps, 6 boats, turret-mounted twin 
 Built with three.js. The whole game bundles into one self-contained HTML file, which is used two ways:
 
 - **Web:** `game-src/web/index.html` (static site, deployed on Vercel)
-- **Apple app:** `MyApp/Wakefire.html`, shown in a `WKWebView` by the SwiftUI app (`Untitled Project 2.xcodeproj`, scheme `MyApp`)
+- **Apple app:** `Hyperrealistic_boat_game/Wakefire.html`, shown in a `WKWebView` by the SwiftUI app (`Hyperrealistic_boat_game.xcodeproj`)
 
 ## Controls
 
@@ -23,7 +23,7 @@ Built with three.js. The whole game bundles into one self-contained HTML file, w
 ```sh
 cd game-src
 npm install
-node build.mjs   # writes MyApp/Wakefire.html and game-src/web/index.html
+node build.mjs   # writes Hyperrealistic_boat_game/Wakefire.html and game-src/web/index.html
 ```
 
 Source is in `game-src/src` (`main.js` game loop, `water.js` ocean, `world.js` rocks and course, `boat.js` model, `fx.js` particles and rounds, `audio.js` synthesized sound).

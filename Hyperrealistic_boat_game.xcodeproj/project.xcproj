@@ -11,20 +11,20 @@
     ],
   },
   "files": [
-    { "kind": "folder", "path": "MyApp", "target-membership": [ "MyApp" ] },
+    { "kind": "folder", "path": "Hyperrealistic_boat_game", "target-membership": [ "Hyperrealistic_boat_game" ] },
     {
       "kind": "group",
       "name": "Products",
       "children": [
-        { "path": "<PRODUCTS>/MyApp.app", "id": "000000000000000000000120", "type": "wrapper.application", "index": false },
+        { "path": "<PRODUCTS>/Hyperrealistic_boat_game.app", "id": "000000000000000000000120", "type": "wrapper.application", "index": false },
       ],
     },
   ],
   "targets": [
     {
-      "name": "MyApp",
+      "name": "Hyperrealistic_boat_game",
       "id": "000000000000000100000000",
-      "product": "Products/MyApp.app",
+      "product": "Products/Hyperrealistic_boat_game.app",
       "product-type": "application",
       "build-phases": [
         "compile-sources",

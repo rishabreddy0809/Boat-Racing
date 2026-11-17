@@ -16,7 +16,7 @@ const res = await build({
 });
 const js = res.outputFiles[0].text.replace(/<\/script/g, '<\\/script');
 const html = readFileSync(join(here, 'template.html'), 'utf8').replace('/*__JS__*/', () => js);
-const out = join(here, '..', 'MyApp', 'Wakefire.html');
+const out = join(here, '..', 'Hyperrealistic_boat_game', 'Wakefire.html');
 writeFileSync(out, html);
 console.log(`wrote ${out} (${(html.length / 1024).toFixed(0)} KB)`);
 // Same file as a static site (web/index.html) for hosting.
