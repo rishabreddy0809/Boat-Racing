@@ -114,6 +114,9 @@ resize();
 // ------------------------------------------------------------------ boats
 loadBoatAsset();
 const boats = [];
+// Player hull is tougher than the AI boats' so you don't get shredded right after a respawn.
+const PLAYER_HULL = 250, AI_HULL = 100;
+const PLAYER_SPAWN_SHIELD = 5;
 function makeBoat(i) {
   const model = createBoat(ACCENTS[i]);
   scene.add(model.group);
@@ -122,7 +125,7 @@ function makeBoat(i) {
     i, name: NAMES[i], isPlayer: i === 0, model,
     pos: new THREE.Vector3(), vel: new THREE.Vector3(), heading: 0, speed: 0, y: 0, vy: 0, pitch: 0, roll: 0, hPrev: 0, air: 0,
     steer: 0, steerIn: 0, throttle: 0, boosting: false, boost: 100,
-    hp: 100, alive: true, respawnT: 0, invuln: 0, lastHit: -99,
+    hp: i === 0 ? PLAYER_HULL : AI_HULL, maxHp: i === 0 ? PLAYER_HULL : AI_HULL, alive: true, respawnT: 0, invuln: 0, lastHit: -99,
     heat: 0, overheated: false, gunT: 0, barrel: 0, firing: false,
     rockets: 4, rocketT: 0, mines: 3, mineT: 0, rocketCd: 0, mineCd: 0,
     aimYaw: 0, aimPitch: 0, recoil: 0, shotN: 0, onTarget: false, assist: null,
@@ -160,7 +163,7 @@ function resetRace() {
     const b = boats[bi];
     placeOnCourse(b, course.n - 5 - slot * 4, slot % 2 ? 6 : -6, 0);
     Object.assign(b, {
-      lap: -1, hp: 100, alive: true, invuln: 0, heat: 0, overheated: false, rockets: 4, mines: 3, rocketT: 0, mineT: 0,
+      lap: -1, hp: b.maxHp, alive: true, invuln: 0, heat: 0, overheated: false, rockets: 4, mines: 3, rocketT: 0, mineT: 0,
       finished: false, wrecks: 0, boost: 100, target: null, throttle: 0, steerIn: 0, lastHit: -99, air: 0,
     });
     b.baseSpeed = b.isPlayer ? 44 : aiSpeeds[bi];
@@ -610,8 +613,8 @@ function updateBoat(b, dt) {
     b.respawnT -= dt;
     if (b.respawnT <= 0) {
       b.alive = true;
-      b.hp = 100;
-      b.invuln = 3;
+      b.hp = b.maxHp;
+      b.invuln = b.isPlayer ? PLAYER_SPAWN_SHIELD : 3;
       b.heat = 0;
       b.overheated = false;
       placeOnCourse(b, b.idx, 0, 10);
@@ -710,7 +713,7 @@ function updateBoat(b, dt) {
   if (b.overheated && b.heat < 0.25) b.overheated = false;
   if (b.rockets < 4 && (b.rocketT += dt) > 6) { b.rockets++; b.rocketT = 0; }
   if (b.mines < 3 && (b.mineT += dt) > 9) { b.mines++; b.mineT = 0; }
-  if (b.isPlayer && time - b.lastHit > 6) b.hp = Math.min(100, b.hp + 3 * dt);
+  if (b.isPlayer && time - b.lastHit > 6) b.hp = Math.min(b.maxHp, b.hp + b.maxHp * 0.03 * dt);
   if (b.invuln > 0) b.invuln -= dt;
 
   // transform
@@ -1053,8 +1056,8 @@ function updateHUD(dt) {
   const b = player;
   el.speed.textContent = Math.round(Math.abs(b.speed) * 3.6);
   el.boost.style.transform = `scaleX(${b.boost / 100})`;
-  el.hull.style.transform = `scaleX(${b.hp / 100})`;
-  el.hull.style.background = b.hp < 30 ? '#e2553a' : '#f1efe9';
+  el.hull.style.transform = `scaleX(${b.hp / b.maxHp})`;
+  el.hull.style.background = b.hp < b.maxHp * 0.3 ? '#e2553a' : '#f1efe9';
   el.heat.style.transform = `scaleX(${Math.min(1, b.heat)})`;
   el.heatRow.classList.toggle('hot', b.overheated);
 
@@ -1069,7 +1072,7 @@ function updateHUD(dt) {
       el.ret.style.transform = `translate(${p.x - s / 2}px, ${p.y - s / 2}px)`;
       el.ret.style.width = el.ret.style.height = s + 'px';
       el.retTxt.textContent = `${t.name}  ${Math.round(d)} M`;
-      el.retTxt.nextElementSibling.firstElementChild.style.transform = `scaleX(${t.hp / 100})`;
+      el.retTxt.nextElementSibling.firstElementChild.style.transform = `scaleX(${t.hp / t.maxHp})`;
     } else el.ret.style.display = 'none';
   } else el.ret.style.display = 'none';
 
@@ -1183,7 +1186,7 @@ function frame(now) {
   spray.mat.uniforms.uPx.value = px;
   fire.mat.uniforms.uPx.value = px;
   speedPass.uniforms.uStrength.value = state === 'title' ? 0 : (clamp(sf - 0.3, 0, 1) * 1.1 + (player.boosting ? 0.5 : 0)) * (1 - gunCam * 0.75);
-  speedPass.uniforms.uHit.value = hitFx * 0.55 + (player.hp < 30 && player.alive ? 0.12 : 0);
+  speedPass.uniforms.uHit.value = hitFx * 0.55 + (player.hp < player.maxHp * 0.3 && player.alive ? 0.12 : 0);
   speedPass.uniforms.uTime.value = time;
   sky.dome.position.copy(camera.position);
 
